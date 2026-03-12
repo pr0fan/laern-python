@@ -1,7 +1,8 @@
-from database import db
+from models import WorkoutSummary 
 
 class WorkoutTracker:
-   def __init__(self):
+   def __init__(self, database):
+        self.db = database
         self._exercises: list[dict] = []
 
    def get_exercises(self) -> list[dict]:
@@ -9,7 +10,7 @@ class WorkoutTracker:
 
    async def add_exercise(self, name: str, weight: int, category: str):
       exercise = {"name": name, "weight": weight, "category": category}
-      await db["exercises"].insert_one(exercise)
+      await self.db["exercises"].insert_one(exercise)
       exercise["_id"] = str(exercise["_id"])
       self._exercises.append(exercise)
 
@@ -33,7 +34,7 @@ class WorkoutTracker:
         raise HTTPException(status_code=400, detail="No exercises")
 
    async def  load(self) -> None:
-      exercises = await db["exercises"].find({}).to_list(100)
+      exercises = await self.db["exercises"].find({}).to_list(100)
 
       for exercise in exercises:
         exercise["_id"] = str(exercise["_id"])

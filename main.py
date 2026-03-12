@@ -1,7 +1,8 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from contextlib import asynccontextmanager
 from models import WorkoutSummary, ExerciseCreate
 from tracker import WorkoutTracker
+from database import get_db
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -12,34 +13,38 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(lifespan=lifespan)
-tracker = WorkoutTracker()
+
+async def get_tracker(db = Depends(get_db)):
+    t = WorkoutTracker(database=db)
+    await t.load()
+    return t
 
 @app.get("/exercises")
-async def get_exercises():
+async def get_exercises(tracker: WorkoutTracker = Depends(get_tracker)):
     exercises = tracker.get_exercises()
     return exercises
 
 @app.post("/exercises")
-async def add_exercise(body: ExerciseCreate):
+async def add_exercise(body: ExerciseCreate, tracker: WorkoutTracker = Depends(get_tracker)):
     await tracker.add_exercise(body.name, body.weight, body.category)
     return {"message": "Exercise added!"}
 
 @app.get("/exercises/summary")
-async def get_summary():
+async def get_summary(tracker: WorkoutTracker = Depends(get_tracker)):
     if not tracker.get_exercises():
         raise HTTPException(status_code=400, detail="No exercises")
 
     return tracker.summary()
 
 @app.get("/exercises/heaviest")
-async def get_heaviest():
+async def get_heaviest(tracker: WorkoutTracker = Depends(get_tracker)):
     if not tracker.get_exercises():
         raise HTTPException(status_code=400, detail="No exercises")
 
     return tracker.heaviest()
 
 @app.get("/exercises/{category}")
-async def get_by_category(category: str):
+async def get_by_category(category: str, tracker: WorkoutTracker = Depends(get_tracker)):
     if not tracker.get_exercises():
         raise HTTPException(status_code=400, detail="No exercises")
 
