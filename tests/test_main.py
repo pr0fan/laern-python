@@ -9,6 +9,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 async def test_db():
     MONGO_URL = "mongodb://localhost:27017"
     DB_NAME = "fitnesAppTest"
+    APP_ENV = "prod"
     client = AsyncIOMotorClient(MONGO_URL)
     get_db = client[DB_NAME]
     yield get_db

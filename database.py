@@ -1,13 +1,20 @@
 from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
 import os
+from pydantic_settings import BaseSettings
 
-load_dotenv()
-MONGO_URL = os.getenv("MONGO_URL")
-DB_NAME = os.getenv("DB_NAME")
+class Settings(BaseSettings):
+    app_evn: str = "prod"
+    mongodb_url: str
+    db_name: str = "fitnesApp"
 
-client = AsyncIOMotorClient(MONGO_URL)
-db = client[DB_NAME]
+    class Config:
+        env_file = ".env"
+
+settings = Settings()
+
+client = AsyncIOMotorClient(settings.mongodb_url)
+db = client[settings.db_name]
 
 async def get_db():
     return db
