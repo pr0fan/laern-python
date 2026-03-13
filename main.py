@@ -4,15 +4,7 @@ from models import WorkoutSummary, ExerciseCreate
 from tracker import WorkoutTracker
 from database import get_db
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    try:
-       await tracker.load()
-    except FileNotFoundError:
-        pass 
-    yield
-
-app = FastAPI(lifespan=lifespan)
+app = FastAPI()
 
 async def get_tracker(db = Depends(get_db)):
     t = WorkoutTracker(database=db)
